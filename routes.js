@@ -111,8 +111,6 @@ router.get('/eventos/redirect/:id', (req, res) => {
 
 router.put('/eventos/:id', (req, res) => {
     const id = req.params.id;
-    const nombre = req.body.nombre;
-    const url = nombre.toLowerCase().replace(' ','');
     const descripcion = req.body.descripcion;
     const fechainicio = req.body.fechainicio; //2020-05-27 07:30:00
     const fechafin = req.body.fechafin; //2020-05-27 07:30:00
@@ -127,7 +125,7 @@ router.put('/eventos/:id', (req, res) => {
     const inscripcion = req.body.inscripcion;
     const area = req.body.area;
 
-    mysqlConnection.query(`UPDATE evento SET nombre='${nombre}', url='${url}', descripcion='${descripcion}',fechainicio='${fechainicio}',fechafin='${fechafin}',estado='${estado}',enlace='${enlace}',grabacion='${grabacion}',entidad='${entidad}',dependencia='${dependencia}',responsable='${responsable}',email='${email}',telefono='${telefono}',inscripcion='${inscripcion}',area='${area}' WHERE id=${id}`, (err, rows, fields) => {
+    mysqlConnection.query(`UPDATE evento SET descripcion='${descripcion}',fechainicio='${fechainicio}',fechafin='${fechafin}',estado='${estado}',enlace='${enlace}',grabacion='${grabacion}',entidad='${entidad}',dependencia='${dependencia}',responsable='${responsable}',email='${email}',telefono='${telefono}',inscripcion='${inscripcion}',area='${area}' WHERE id=${id}`, (err, rows, fields) => {
         if (err) {
             res.status(400).json({
                 status: 400,
@@ -179,8 +177,6 @@ router.post('/eventos', (req, res) => {
     const telefono = req.body.telefono;
     const inscripcion = req.body.inscripcion;
     const area = req.body.area;
-
-    console.log(req.body);
 
     mysqlConnection.query(`INSERT INTO evento VALUES (NULL,'${nombre}','${url}','${descripcion}','${fechainicio}','${fechafin}','${estado}', '${enlace}','${grabacion}',${entidad},'${dependencia}','${responsable}','${email}','${telefono}','${inscripcion}',${area})`, (err, rows, fields) => {
         if (err) {
@@ -255,12 +251,34 @@ router.delete('/entidades/:id', (req, res) => {
     });
 });
 
+router.put('/entidades/:id', (req, res) => {
+    const id = req.params.id; 
+    const nombre = req.body.nombre;
+    const tipo = req.body.tipo;
+    const ciudad = req.body.ciudad;
+    mysqlConnection.query(`UPDATE entidad SET nombre='${nombre}', tipo=${tipo}, ciudad='${ciudad}' WHERE id=${id}`, (err, rows, fields) => {
+        if (err) {
+            res.status(400).json({
+                status: 400,
+                ok: false,
+                msg: err
+            });
+        } else {
+            res.status(200).json({
+                status: 200,
+                ok: true,
+                msg: 'Registro exitoso.'
+            });
+        }
+    });
+});
+
 router.post('/entidades', (req, res) => {
     const nombre = req.body.nombre;
     const tipo = req.body.tipo;
     const ciudad = req.body.ciudad;
 
-    mysqlConnection.query(`INSERT INTO entidad VALUES (NULL,'${nombre}','${tipo}','${ciudad}'`, (err, rows, fields) => {
+    mysqlConnection.query(`INSERT INTO entidad VALUES (NULL,'${nombre}',${tipo},'${ciudad}')`, (err, rows, fields) => {
         if (err) {
             res.status(400).json({
                 status: 400,
