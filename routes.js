@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const mysql = require('mysql');
+const fs = require('fs');
 const router = Router();
 
 require('./config');
@@ -32,7 +33,7 @@ router.post('/login', (req, res) => {
                 msg: err
             });
         } else {
-            if(rows.length > 0) {
+            if (rows.length > 0) {
                 delete rows[0].clave;
                 res.status(200).json({
                     status: 200,
@@ -92,6 +93,7 @@ router.get('/eventos/:id', (req, res) => {
 
 router.get('/eventos/redirect/:id', (req, res) => {
     const id = req.params.id;
+
     mysqlConnection.query(`SELECT * FROM evento WHERE url='${id}'`, (err, rows, fields) => {
         if (err) {
             res.status(400).json({
@@ -161,24 +163,53 @@ router.delete('/eventos/:id', (req, res) => {
     });
 });
 
-router.post('/eventos', (req, res) => {
+router.post('/eventos/search', (req, res) => {
     const nombre = req.body.nombre;
-    const url = nombre.toLowerCase().replace(' ','');
-    const descripcion = req.body.descripcion;
-    const fechainicio = req.body.fechainicio; //2020-05-27 07:30:00
-    const fechafin = req.body.fechafin; //2020-05-27 07:30:00
-    const estado = req.body.estado;
-    const enlace = req.body.enlace;
-    const grabacion = req.body.grabacion;
-    const entidad = req.body.entidad;
-    const dependencia = req.body.dependencia;
-    const responsable = req.body.responsable;
-    const email = req.body.email;
-    const telefono = req.body.telefono;
-    const inscripcion = req.body.inscripcion;
-    const area = req.body.area;
+    mysqlConnection.query(`SELECT * FROM evento WHERE nombre LIKE '%${nombre}%'`, (err, rows, fields) => {
+        if (err) {
+            res.status(400).json({
+                status: 400,
+                ok: false,
+                msg: err
+            });
+        } else {
+            res.status(200).json({
+                status: 200,
+                ok: true,
+                msg: rows
+            });
+        }
+    });
+});
 
-    mysqlConnection.query(`INSERT INTO evento VALUES (NULL,'${nombre}','${url}','${descripcion}','${fechainicio}','${fechafin}','${estado}', '${enlace}','${grabacion}',${entidad},'${dependencia}','${responsable}','${email}','${telefono}','${inscripcion}',${area})`, (err, rows, fields) => {
+router.post('/eventos', (req, res) => {
+    const nombre = `'${req.body.nombre}'`;
+    const url = `${nombre.toLowerCase().replace(/ /g, '')}`;
+    const descripcion = `'${req.body.descripcion}'`;
+    const fechainicio = `'${req.body.fechainicio}'`;
+    const fechafin = `'${req.body.fechafin}'`;
+    const estado = `${req.body.estado}`;
+    const enlace = req.body.enlace===''?'DEFAULT':`'${req.body.enlace}'`;
+    const grabacion = req.body.grabacion===''?'DEFAULT':`'${req.body.grabacion}'`;
+    const entidad = `${req.body.entidad}`;
+    const dependencia = req.body.dependencia===''?'DEFAULT':`'${req.body.dependencia}'`;
+    const responsable = `'${req.body.responsable}'`;
+    const email = `'${req.body.email}'`;
+    const telefono = `'${req.body.telefono}'`;
+    const inscripcion = req.body.inscripcion===''?'DEFAULT':`'${req.body.inscripcion}'`;
+    const area = `${req.body.area}`;
+    let file = req.body.file;
+    // let filen;
+    if (file !== null) {
+    //     filen = req.body.file.filename.split('.');
+    //     archivo = `${url.replace(/'/g,'') +'.'+filen[1]}`;
+    //     fs.writeFile(`./imgs/${archivo}`, file.value, { encoding: 'base64' }, function (err) {
+    //         //Finished
+    //     });
+        file = `'${file.value}'`;
+    }
+    const sql = `INSERT INTO evento VALUES (DEFAULT,${nombre},${url},${descripcion},${fechainicio},${fechafin},${estado},${enlace},${grabacion},${entidad},${dependencia},${responsable},${email},${telefono},${inscripcion},${area},${file})`;
+    mysqlConnection.query(sql, (err, rows, fields) => {
         if (err) {
             res.status(400).json({
                 status: 400,
@@ -252,7 +283,7 @@ router.delete('/entidades/:id', (req, res) => {
 });
 
 router.put('/entidades/:id', (req, res) => {
-    const id = req.params.id; 
+    const id = req.params.id;
     const nombre = req.body.nombre;
     const tipo = req.body.tipo;
     const ciudad = req.body.ciudad;
